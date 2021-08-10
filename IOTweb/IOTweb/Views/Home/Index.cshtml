@@ -1,0 +1,64 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        window.onload = function () {
+
+            // Initial Values
+            var xValue = 0;
+            var yValue = 0;
+            var newDataCount = 6;
+            dataPoints = [];
+            
+            var chart = new CanvasJS.Chart("chartContainer", {
+                theme: "light2",
+                title: {
+                    text: "Live Temperature Update in Realtime"
+                },
+                axisY: {
+                    suffix: " °C",
+                },
+                data: [{
+                    type: "spline",
+                    yValueFormatString: "#,##0.## °C",
+                    dataPoints: dataPoints
+                }]
+            });
+
+            updateData();
+
+            function addData(data) {
+                if (newDataCount !== 1) {
+                    $.each(data, function (key, value) {
+                        dataPoints.push({ x: value.x, y: parseFloat(value.y) });
+                        xValue++;
+                        yValue = parseFloat(value.y);
+                    });
+                    newDataCount = 1;
+                } else {
+                    dataPoints.shift();
+                    dataPoints.push({ x: data[0].x, y: parseFloat(data[0].y) });
+                    xValue++;
+                    yValue = parseFloat(data[0].y);
+                }
+                chart.render();
+                setTimeout(updateData, 1000);
+            }
+
+            function updateData() {
+                $.getJSON("/home/json?xstart=" + xValue + "&ystart=" + yValue + "&length=" + newDataCount, addData);
+            }
+
+        }
+    </script>
+</head>
+<body>
+    <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+    <script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+    <script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
+</body>
+</html>       
